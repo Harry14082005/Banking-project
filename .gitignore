@@ -1,0 +1,13 @@
+.idea/
+.vscode/
+
+target/
+
+*.csv
+*.pkl
+*.joblib
+
+__pycache__/
+venv/
+
+.env
