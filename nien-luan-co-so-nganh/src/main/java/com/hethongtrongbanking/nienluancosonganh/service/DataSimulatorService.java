@@ -8,61 +8,95 @@ import org.springframework.stereotype.Service;
 import com.hethongtrongbanking.nienluancosonganh.dto.request.PaymentRequest;
 
 import java.io.BufferedReader;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 @Slf4j
 public class DataSimulatorService {
 
-    // Tao 5 luong chay // gion 5 thu ngan sieu thi
+    // Tao 5 luong chay song song (giong 5 thu ngan sieu thi)
     private final ExecutorService executorService = Executors.newFixedThreadPool(5);
 
     @Autowired
     private PaymentService paymentService;
 
-    // Khi nao he thong khoi dong xong het, ket noi DB on dinh, hay tu dong goi cai
-    // nay
-    @org.springframework.context.event.EventListener(org.springframework.boot.context.event.ApplicationReadyEvent.class)
-    public void startSimulation() {
-        log.info("Bat dau he thong gia lap giao dich...");
+    // Cờ hiệu: simulator có đang chạy không?
+    private final AtomicBoolean running = new AtomicBoolean(false);
+    // Bộ đếm tổng số giao dịch đã xử lý
+    private final AtomicInteger processedCount = new AtomicInteger(0);
 
-        // Chay ngam trong 1 luong rieng -> khong lam dung Spring boot
+    public String startSimulation(int delayMs) {
+        if (running.get()) {
+            return "Simulator dang chay roi! Da xu ly " + processedCount.get() + " giao dich.";
+        }
+
+        running.set(true);
+        processedCount.set(0);
+        log.info("Bat dau he thong gia lap giao dich (delay={}ms)...", delayMs);
+
+        // Chay ngam trong 1 luong rieng -> khong lam dung Spring Boot
+        // submit() giao viec cho 1 Thread trong ThreadPool
         executorService.submit(() -> {
             try {
-                // Doc file csv tu resources
-                BufferedReader reader = new BufferedReader(new InputStreamReader(
-                        getClass().getClassLoader().getResourceAsStream("fraudTest.csv")));
+                InputStream is = getClass().getClassLoader().getResourceAsStream("fraudTest.csv");
+                if (is == null) {
+                    log.error("Khong tim thay file fraudTest.csv trong resources!");
+                    running.set(false);
+                    return;
+                }
 
+                // Boc lai de doc tung dong text
+                BufferedReader reader = new BufferedReader(new InputStreamReader(is));
                 String line;
                 boolean isFirstLine = true;
 
-                while ((line = reader.readLine()) != null) {
+                while ((line = reader.readLine()) != null && running.get()) {
                     if (isFirstLine) {
-                        isFirstLine = false; // Bo qua dong tieu de trong csv
+                        isFirstLine = false; // Bo qua dong tieu de trong CSV
                         continue;
                     }
 
                     // Lay cac dong dulieu them cho luong xu ly
                     processTransactionAsync(line);
-
-                    // Sleep nhe
-                    Thread.sleep(50);
+                    Thread.sleep(delayMs);
                 }
+
+                reader.close();
+                log.info("Simulator hoan tat. Tong: {} giao dich.", processedCount.get());
             } catch (Exception e) {
-                log.error("Loi doc file csv", e);
+                log.error("Loi doc file CSV", e);
+            } finally {
+                running.set(false);
             }
         });
+
+        return "Simulator da bat dau! Delay: " + delayMs + "ms giua moi giao dich.";
+    }
+
+    // Dung simulator
+    public String stopSimulation() {
+        if (!running.get()) {
+            return "Simulator khong dang chay.";
+        }
+        running.set(false);
+        return "Simulator da dung. Tong xu ly: " + processedCount.get() + " giao dich.";
+    }
+
+    // Lay trang thai hien tai
+    public String getStatus() {
+        return running.get()
+                ? "RUNNING - Da xu ly: " + processedCount.get() + " giao dich"
+                : "STOPPED - Tong da xu ly: " + processedCount.get() + " giao dich";
     }
 
     private void processTransactionAsync(String csvLine) {
         // Giao viec cho thu ngan xu ly
         executorService.submit(() -> {
-            // tach chuoi csv + giao payment entity roi gui qua kafka
-            // log.info("Dang quet the: {}", csvLine.substring(0, Math.min(50,
-            // csvLine.length())) + "...");
-
             try {
                 String[] data = csvLine.split(",");
 
@@ -85,11 +119,10 @@ public class DataSimulatorService {
 
                 // Quang DTO cho NVien Payment xu ly
                 paymentService.processPayment(request);
+                processedCount.incrementAndGet(); // ????
             } catch (Exception e) {
                 log.error("Loi khi tach chuoi CSV: {}", e.getMessage());
             }
-
         });
     }
-
 }

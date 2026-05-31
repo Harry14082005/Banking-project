@@ -1,11 +1,16 @@
 package com.hethongtrongbanking.nienluancosonganh.dto.request;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
 
 @Data
 @Builder
-
+@NoArgsConstructor
+@AllArgsConstructor
 public class PaymentRequest {
 
     private String ccNum; // so the

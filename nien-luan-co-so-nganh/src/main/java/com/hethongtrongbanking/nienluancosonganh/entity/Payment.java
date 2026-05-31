@@ -5,7 +5,7 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import com.hethongtrongbanking.nienluancosonganh.Enum.PaymentStatus;
+import com.hethongtrongbanking.nienluancosonganh.enums.PaymentStatus;
 
 // Bang quan trong nhat: Luu tru giao dich thanh toan
 @Entity

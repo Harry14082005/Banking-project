@@ -2,7 +2,7 @@ package com.hethongtrongbanking.nienluancosonganh.entity;
 
 import java.time.LocalDateTime;
 
-import com.hethongtrongbanking.nienluancosonganh.Enum.PaymentStatus;
+import com.hethongtrongbanking.nienluancosonganh.enums.PaymentStatus;
 
 import jakarta.persistence.*;
 import lombok.*;

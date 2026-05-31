@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
 
-import com.hethongtrongbanking.nienluancosonganh.Enum.FraudCaseStatus;
+import com.hethongtrongbanking.nienluancosonganh.enums.FraudCaseStatus;
 
 @Entity
 @Table(name = "fraud_case")

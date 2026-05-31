@@ -75,13 +75,24 @@ public class SecurityConfig {
                         // Public: bat ki ai cung duoc Register & Login (khong can Token)
                         .requestMatchers("/api/auth/**").permitAll()
 
+                        // Public tam thoi: De test Payment bang Postman khong can login
+                        // (Sau nay se chuyen thanh .authenticated())
+                        .requestMatchers("/api/payment/**").permitAll()
+
+                        // Simulator: Chi ADMIN moi duoc bat/tat
+                        // (Tam thoi permitAll de test, sau chuyen hasRole ADMIN)
+                        .requestMatchers("/api/simulator/**").permitAll()
+
+                        // Actuator health check
+                        .requestMatchers("/actuator/**").permitAll()
+
                         // Admin: Chi user co Role la ADMIN (quan ly rule, xoa tai khoan)
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
-                        // User: Role ADMIN va ANALYST deu duoc vao (de duyet FraudCase)
+                        // Analyst: Role ADMIN va ANALYST deu duoc vao (de duyet FraudCase)
                         .requestMatchers("/api/analyst/**").hasAnyRole("ADMIN", "ANALYST")
 
-                        // Tất cả các API còn lại đều phải có Token hop le(Role bất kỳ)
+                        // Tat ca cac API con lai deu phai co Token hop le (Role bat ky)
                         .anyRequest().authenticated()
 
                 );

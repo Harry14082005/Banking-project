@@ -1,4 +1,4 @@
-package com.hethongtrongbanking.nienluancosonganh.Enum;
+package com.hethongtrongbanking.nienluancosonganh.enums;
 
 public enum PaymentStatus {
     PENDING, // Cho duyet
